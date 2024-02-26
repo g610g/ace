@@ -32,14 +32,21 @@ impl WeightNode{
     //rotates left side which is your self
     fn rotate_right(mut self) -> Option<Box<Rope>>{
         //self is a weight struct
-        let mut new_root = self.left.unwrap();   
-        let mut w = new_root.return_weight_struct();
-        if let Some(right) = w.right.as_mut(){
-            self.weight =  right.get_weight();
-        }   
-        self.left = w.right;
-        w.right = Rope::new_weight_node(self);
-        return Rope::new_weight_node(w);
+        let mut box_new_root = self.left.unwrap();   
+        let mut new_root = box_new_root.return_weight_struct();
+        let new_root_right = new_root.right.unwrap().return_weight_struct();
+        self.weight = new_root_right.weight;
+        self.left = Rope::new_weight_node(new_root_right);
+        new_root.right = Rope::new_weight_node(self);
+        Rope::new_weight_node(new_root)
+    }
+    fn rotate_left(mut self)-> Option<Box<Rope>>{
+        let mut box_new_root = self.right.unwrap();
+        let mut new_root = box_new_root.return_weight_struct();
+        new_root.weight += self.weight;
+        self.right = new_root.left; 
+        new_root.left = Rope::new_weight_node(self);
+        return Rope::new_weight_node(new_root);
     }
 }
 pub enum Rope{
