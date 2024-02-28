@@ -75,6 +75,26 @@ impl Rope{
             }
         }
     }
+    pub fn get_height(&self) ->  i32{
+        if self.is_leaf(){
+            return  0;
+        }
+        if let WeightNode(w)  = self{
+            let mut  left_height = 0;
+            let mut right_height = 0;
+            let mut weight_left = 0;
+            let mut weight_right = 0;
+            if let Some(left) = w.left.as_ref(){
+                left_height = left.get_height();
+            }
+            if let Some(right) = w.right.as_ref(){
+              right_height = right.get_height();
+            }
+            return (left_height.max(right_height) + 1);
+            
+        }
+        return 0;
+    }
     fn return_weight_struct(self) -> WeightNode{
         match self {
             WeightNode(w) => {
@@ -101,8 +121,60 @@ impl Rope{
         let leaf_node = LeafNode::new(string);
         Ok(Box::new(LeafNode(leaf_node)))
     }
+   
+
+    pub fn helper_inorder(&self){
+        if self.is_leaf(){
+            println!("leaf");
+            return;
+        }
+        match self{
+            WeightNode(w) => {
+                if let Some(left) = w.left.as_ref(){
+                    left.helper_inorder();
+                    println!("{}", w.weight);
+                }
+                if let Some(right) = w.right.as_ref(){
+                    right.helper_inorder();
+                }
+            },
+            _ => {} 
+        }
+    }
+    pub fn get_rope_length(&self)-> usize{
+        if self.is_leaf(){
+            return self.get_weight();
+        }
+        let mut left_len = 0;
+        let mut right_len = 0;
+        match self{
+            WeightNode(w) => {
+                left_len = w.left.as_ref().unwrap().get_rope_length();
+                right_len = w.right.as_ref().unwrap().get_rope_length();
+                return left_len + right_len;
+            },
+            _ => {return 0}
+        }
+        return 0;
+    }
+    fn get_height_difference(&self) -> i32{
+        if self.is_leaf(){
+            return 0;
+        }
+        let mut left_height = 0;
+        let mut right_height = 0;
+        if let WeightNode(w) = self{
+            if let Some(w_left) = w.left.as_ref(){
+                left_height = w_left.get_height();
+            }
+            if let Some(w_right) = w.right.as_ref(){
+                right_height = w_right.get_height();
+            }
+        }
+        return left_height - right_height;
+    }
     pub fn append(self, string: &str)-> Result<Box<Rope>, &str>{
-        //takes O(1) without balancing
+        //takes O(1) without balancing O(logn) prolly when doing balancing since getting the height would traverse each of the node
         match self{
             WeightNode(w) => {
                 //creates the new leafnode for the string
@@ -130,59 +202,6 @@ impl Rope{
             }
         }
     }
-    pub fn get_height(&self) -> i32{
-        if self.is_leaf(){
-            return 0;
-        }
-        if let WeightNode(w)  = self{
-            let mut  left_height = 0;
-            let mut right_height = 0;
-            if let Some(left) = w.left.as_ref(){
-                left_height = left.get_height();
-            }
-            if let Some(right) = w.right.as_ref(){
-                right_height = right.get_height();
-            }
-            return left_height.max(right_height) + 1;
-            
-        }
-        return 0;
-    }
-    pub fn helper_inorder(&self){
-        if self.is_leaf(){
-            println!("leaf");
-            return;
-        }
-        match self{
-            WeightNode(w) => {
-                if let Some(left) = w.left.as_ref(){
-                    left.helper_inorder();
-                    println!("{}", w.weight);
-                }
-                if let Some(right) = w.right.as_ref(){
-                    right.helper_inorder();
-                }
-            },
-            _ => {} 
-        }
-
-    }
-    fn get_height_difference(&self) -> i32{
-        if self.is_leaf(){
-            return 0;
-        }
-        let mut left_height = 0;
-        let mut right_height = 0;
-        if let WeightNode(w) = self{
-            if let Some(w_left) = w.left.as_ref(){
-                left_height = w_left.get_height();
-            }
-            if let Some(w_right) = w.right.as_ref(){
-                right_height = w_right.get_height();
-            }
-        }
-        return left_height - right_height;
-    }
     fn balance(self) -> Result<Box<Rope>, &'static str>{
         if self.is_leaf(){
             panic!("Cannot balance or rotate leaf node!");
@@ -195,10 +214,8 @@ impl Rope{
             //the left of the root is moved here
             if let Some(left) = root_weight.left{
                 if left.get_height_difference() <= -1 {
-                    
                     println!("height difference");        
                     root_weight.left = left.return_weight_struct().rotate_left();
-
                     return Ok(root_weight.rotate_right().unwrap());
                 }
                 //later the left will be used by the rotate right so thats why there is a problem
