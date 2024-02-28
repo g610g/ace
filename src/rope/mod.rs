@@ -83,7 +83,7 @@ impl Rope{
             _ => {panic!("Not an weight node")}
         }
     }
-    fn is_weight(&self) -> bool{
+    fn _is_weight(&self) -> bool{
         match self {
             LeafNode(lf) => false,
             WeightNode(w) => true
@@ -96,12 +96,12 @@ impl Rope{
             )
         )
     }
-    pub fn new(string: &str) -> Result<Rope, &str>{
+    pub fn new(string: &str) -> Result<Box<Rope>, &str>{
         // let leaf_node = Self::new_leaf_node(string);
         let leaf_node = LeafNode::new(string);
-        Ok(LeafNode(leaf_node))
+        Ok(Box::new(LeafNode(leaf_node)))
     }
-    pub fn append(self, string: &str)-> Result<Rope, &str>{
+    pub fn append(self, string: &str)-> Result<Box<Rope>, &str>{
         //takes O(1) without balancing
         match self{
             WeightNode(w) => {
@@ -118,16 +118,15 @@ impl Rope{
                 new_root.right = new_ln;
                 //new root left is the current rope the we made
                 //find the height difference of your left side and then balance it 
-                new_root.left = Self::new_weight_node(w);
-                
-                return Ok(WeightNode(new_root));
+                new_root.left = Self::new_weight_node(w);  
+                return Ok(WeightNode(new_root).balance().unwrap());
             },
             LeafNode(l) => {
                 let mut weight_root = WeightNode::new(l.length, 0);
                 weight_root.left = Self::new_leaf_node(&l.string);
                 weight_root.right = Self::new_leaf_node(string);
                 let root = WeightNode(weight_root);
-                return Ok(root);
+                return Ok(Box::new(root));
             }
         }
     }
@@ -184,39 +183,31 @@ impl Rope{
         }
         return left_height - right_height;
     }
-       fn balance(self) -> Result<Rope, &'static str>{
+    fn balance(self) -> Result<Box<Rope>, &'static str>{
         if self.is_leaf(){
             panic!("Cannot balance or rotate leaf node!");
         }
-        //get height difference of our left side. If it is zero or greater then do not rotate your left. If it is -1 or less than then rotate it to the left
-        
-        match self{
-            WeightNode(mut w) => {
-                if let Some(mut left) = w.left{
-                    //left rotate
-                    if left.get_height_difference() <= -1 {
-                        w.left = left.return_weight_struct().rotate_left();
-                    }
+        let height_differ = self.get_height_difference();
+        if height_differ > 1 || height_differ < -1{
+            //get height difference of our left side. If it is zero or greater then do not rotate your left. If it is -1 or less than then rotate it to the left
+            let mut root_weight = self.return_weight_struct();
+            //the left of the root is moved here
+            if let Some(left) = root_weight.left{
+                if left.get_height_difference() <= -1 {
+                    root_weight.left = left.return_weight_struct().rotate_left();
+                    return Ok(root_weight.rotate_right().unwrap());
                 }
-                //box will be returned instead of rope yawa!
-                return w.rotate_right().unwrap();
-                // if let Some(right) = w.right.as_ref(){
-                //     right_height = right.get_height();
-                // }
-                // if left_height - right_height > 1 || left_height - right_height < -1{
-                                    
-                //     //you have to find a way to extract the weight struct and rotate it to the left and will return a Rope num
-                //     return w.rotate_right();
-                // }else{
-                //     return Rope::new_weight_node(w);
-                // }
-                
-            },
-            _ => {panic!("Leaf node ni")}
-        };
-        
-     
-        // return self;
+                //later the left will be used by the rotate right so thats why there is a problem
+                else{
+                    // let new_root = root_weight.rotate_right().unwrap();
+                    return Err("new_root");
+                }
+            }else{
+                return Ok(root_weight.rotate_right().unwrap());
+            }
+        }else{
+            Err("Wako kabalo nganong mag error ni")
+        }
     }
 
 
