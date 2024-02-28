@@ -34,9 +34,9 @@ impl WeightNode{
         //self is a weight struct
         let mut box_new_root = self.left.unwrap();   
         let mut new_root = box_new_root.return_weight_struct();
-        let new_root_right = new_root.right.unwrap().return_weight_struct();
-        self.weight = new_root_right.weight;
-        self.left = Rope::new_weight_node(new_root_right);
+        let new_root_right = new_root.right.unwrap();
+        self.weight = new_root_right.get_weight();
+        self.left = Some(new_root_right);
         new_root.right = Rope::new_weight_node(self);
         Rope::new_weight_node(new_root)
     }
@@ -65,7 +65,7 @@ impl Rope{
             WeightNode(w) => false
         }
     }
-    fn get_weight(&self) -> usize{
+    pub fn get_weight(&self) -> usize{
         match self{
             WeightNode(w) => {
                 return w.weight;
@@ -80,7 +80,7 @@ impl Rope{
             WeightNode(w) => {
                return  w; 
             }
-            _ => {panic!("Not an weight node")}
+            _ => {panic!("Not a weight node")}
         }
     }
     fn _is_weight(&self) -> bool{
@@ -187,6 +187,7 @@ impl Rope{
         if self.is_leaf(){
             panic!("Cannot balance or rotate leaf node!");
         }
+        
         let height_differ = self.get_height_difference();
         if height_differ > 1 || height_differ < -1{
             //get height difference of our left side. If it is zero or greater then do not rotate your left. If it is -1 or less than then rotate it to the left
@@ -194,19 +195,25 @@ impl Rope{
             //the left of the root is moved here
             if let Some(left) = root_weight.left{
                 if left.get_height_difference() <= -1 {
+                    
+                    println!("height difference");        
                     root_weight.left = left.return_weight_struct().rotate_left();
+
                     return Ok(root_weight.rotate_right().unwrap());
                 }
                 //later the left will be used by the rotate right so thats why there is a problem
                 else{
-                    // let new_root = root_weight.rotate_right().unwrap();
-                    return Err("new_root");
+                    root_weight.left = Some(left);
+                    let new_root = root_weight.rotate_right().unwrap();
+                    return Ok(new_root);
                 }
+            //else part must be fixed LOGIC PROBLEM
             }else{
-                return Ok(root_weight.rotate_right().unwrap());
+                return Err("There is an error");
             }
+
         }else{
-            Err("Wako kabalo nganong mag error ni")
+            Ok(Box::new(self))
         }
     }
 
