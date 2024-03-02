@@ -32,17 +32,16 @@ impl WeightNode{
     //rotates left side which is your self
     fn rotate_right(mut self) -> Option<Box<Rope>>{
         //self is a weight struct
-        let mut box_new_root = self.left.unwrap();   
+        let  box_new_root = self.left.unwrap();   
         let mut new_root = box_new_root.return_weight_struct();
         let new_root_right = new_root.right.unwrap();
         self.weight = new_root_right.get_weight();
-        println!("right new root weight: {}", self.weight);
         self.left = Some(new_root_right);
         new_root.right = Rope::new_weight_node(self);
         Rope::new_weight_node(new_root)
     }
     fn rotate_left(mut self)-> Option<Box<Rope>>{
-        let mut box_new_root = self.right.unwrap();
+        let box_new_root = self.right.unwrap();
         let mut new_root = box_new_root.return_weight_struct();      
         self.right = new_root.left; 
         new_root.left = Rope::new_weight_node(self);
@@ -164,7 +163,6 @@ impl Rope{
             },
             _ => {return 0}
         }
-        return 0;
     }
     fn get_height_difference(&self) -> i32{
         if self.is_leaf(){
@@ -223,10 +221,10 @@ impl Rope{
             //the left of the root is moved here
             if let Some(left) = root_weight.left{
                 if left.get_height_difference() <= -1 {
-                    println!("height difference");        
                     root_weight.left = left.return_weight_struct().rotate_left();
                     let left_ref = root_weight.left.as_mut().unwrap();
                     let left_weight = left_ref.get_rope_length();
+                    println!("left_weight on ratation:{left_weight}");
                     match left_ref.set_weight(left_weight) {
                         Ok(()) => {}
                         Err(_e) => {panic!("Error")}    
@@ -239,7 +237,12 @@ impl Rope{
                 else{
                     //this needs to be updated also for this kind of rotate                   
                     root_weight.left = Some(left);
-                    let new_root = root_weight.rotate_right().unwrap();
+                    let mut new_root = root_weight.rotate_right().unwrap();
+                    let root_weight = new_root.get_rope_length();
+                    match new_root.set_weight(root_weight){
+                        Ok(()) => {},
+                        Err(_e) => panic!("Error") 
+                    }
                     return Ok(new_root);
                 }
             //else part must be fixed LOGIC PROBLEM
