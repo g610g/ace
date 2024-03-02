@@ -17,8 +17,8 @@ impl LeafNode{
 pub struct WeightNode{
     weight:usize,
     height:i32,
-    left: Option<Box<Rope>>,
-    right:Option<Box<Rope>>
+    pub left: Option<Box<Rope>>,
+    pub right:Option<Box<Rope>>
 }
 impl WeightNode{
     fn new(weight:usize, height:i32)-> Self{
@@ -36,14 +36,14 @@ impl WeightNode{
         let mut new_root = box_new_root.return_weight_struct();
         let new_root_right = new_root.right.unwrap();
         self.weight = new_root_right.get_weight();
+        println!("right new root weight: {}", self.weight);
         self.left = Some(new_root_right);
         new_root.right = Rope::new_weight_node(self);
         Rope::new_weight_node(new_root)
     }
     fn rotate_left(mut self)-> Option<Box<Rope>>{
         let mut box_new_root = self.right.unwrap();
-        let mut new_root = box_new_root.return_weight_struct();
-        new_root.weight += self.weight;
+        let mut new_root = box_new_root.return_weight_struct();      
         self.right = new_root.left; 
         new_root.left = Rope::new_weight_node(self);
         return Rope::new_weight_node(new_root);
@@ -75,6 +75,14 @@ impl Rope{
             }
         }
     }
+    fn set_weight(&mut self, weight:usize) -> Result<(), &str>{
+        if let WeightNode(w)  = self{
+            w.weight = weight;
+            return Ok(());
+        }
+        return Err("Cannot set weight to the node");
+        
+    }
     pub fn get_height(&self) ->  i32{
         if self.is_leaf(){
             return  0;
@@ -82,8 +90,8 @@ impl Rope{
         if let WeightNode(w)  = self{
             let mut  left_height = 0;
             let mut right_height = 0;
-            let mut weight_left = 0;
-            let mut weight_right = 0;
+            // let mut weight_left = 0;
+            // let mut weight_right = 0;
             if let Some(left) = w.left.as_ref(){
                 left_height = left.get_height();
             }
@@ -95,7 +103,7 @@ impl Rope{
         }
         return 0;
     }
-    fn return_weight_struct(self) -> WeightNode{
+    pub fn return_weight_struct(self) -> WeightNode{
         match self {
             WeightNode(w) => {
                return  w; 
@@ -141,6 +149,7 @@ impl Rope{
             _ => {} 
         }
     }
+    //utility function that returns the overall length of the rope
     pub fn get_rope_length(&self)-> usize{
         if self.is_leaf(){
             return self.get_weight();
@@ -184,7 +193,7 @@ impl Rope{
                 if let Some(right) = w.right.as_ref(){
                     left_weight += right.get_weight();
                 }
-                println!("Total left weight:{left_weight}");
+                // println!("Total left weight:{left_weight}");
                 let mut new_root = WeightNode::new(left_weight, 0);
                 //new root right is the new leaf
                 new_root.right = new_ln;
@@ -216,10 +225,19 @@ impl Rope{
                 if left.get_height_difference() <= -1 {
                     println!("height difference");        
                     root_weight.left = left.return_weight_struct().rotate_left();
-                    return Ok(root_weight.rotate_right().unwrap());
+                    let left_ref = root_weight.left.as_mut().unwrap();
+                    let left_weight = left_ref.get_rope_length();
+                    match left_ref.set_weight(left_weight) {
+                        Ok(()) => {}
+                        Err(_e) => {panic!("Error")}    
+                    }
+                    //get the newly updated weight here for the left side
+                    let new_root = root_weight.rotate_right().unwrap(); 
+                    //get the height of the root new root here
+                    return Ok(new_root);
                 }
-                //later the left will be used by the rotate right so thats why there is a problem
                 else{
+                    //this needs to be updated also for this kind of rotate                   
                     root_weight.left = Some(left);
                     let new_root = root_weight.rotate_right().unwrap();
                     return Ok(new_root);
