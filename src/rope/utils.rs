@@ -1,4 +1,5 @@
 use super::{Rope, WeightNode, LeafNode};
+use std::{error::Error, fs::File, io::BufReader};
 impl WeightNode {
         //rotates left side which is your self
         pub fn rotate_right(mut self) -> Option<Box<Rope>>{
@@ -24,6 +25,17 @@ impl Rope {
         Some(Box::new(
             LeafNode(LeafNode::new(str))
         ))
+    }
+    pub fn open_file(path:&str)->Result<File, Box<dyn Error>>{
+        let file_instance = File::open(path)?;
+        return Ok(file_instance);        
+    }
+    //checks if the split n is within the range of string len
+    pub fn in_range(string:&str, len:usize) -> bool{
+        if string.len() > len{
+            return true;
+        } 
+        false
     }
     pub fn is_leaf(&self) -> bool{
         match self {

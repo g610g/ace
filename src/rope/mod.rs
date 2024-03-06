@@ -1,5 +1,7 @@
+use std::{fs, io::{BufReader, Read}, string};
+
 use super::rope::Rope::{*};
-pub mod utils; 
+mod utils;
 #[derive(Debug)]
 pub struct LeafNode{
     string: String,
@@ -37,13 +39,35 @@ pub enum Rope{
     WeightNode(WeightNode),
 }
 impl Rope{
+    pub fn from_file(path:&str)-> Result<Box<Rope>, &str>{
+        let string_contents = fs::read_to_string(path).unwrap();
+        let n_split:usize = 15;
+        let mut rope:Box<Rope>;
+        let mut first = "";
+        let mut second = "";
+        if !Rope::in_range(&string_contents, n_split){
+            rope = Rope::new(&string_contents).unwrap();
+            return Ok(rope);  
+        }else{
+            //initializing the rope before going to the loop
+            (first, second) = string_contents.split_at(n_split);
+            rope = Rope::new(first).unwrap();
+        }
+        loop {
+            if second.len() < n_split{
+                rope = rope.append( second).unwrap();
+                break;
+            }
+            (first, second) = second.split_at(n_split);
+            rope = rope.append(first).unwrap();
+        }
+        return Ok((rope));
+    } 
     pub fn new(string: &str) -> Result<Box<Rope>, &str>{
         // let leaf_node = Self::new_leaf_node(string);
         let leaf_node = LeafNode::new(string);
         Ok(Box::new(LeafNode(leaf_node)))
     }
-   
-
     pub fn helper_inorder(&self){
         if self.is_leaf(){
             println!("leaf");
