@@ -5,6 +5,7 @@ impl <T> MyBox<T> {
     pub fn new(val:T) -> MyBox<T>{
         MyBox(val)
     }
+    
 }
 impl <T> Deref for MyBox<T>{
     //*(y.deref())

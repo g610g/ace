@@ -1,4 +1,4 @@
-use std::{fs, io::{BufReader, Read}, string};
+use std::{fs};
 
 use super::rope::Rope::{*};
 mod utils;
@@ -17,6 +17,7 @@ impl LeafNode{
         }
     }
 }
+#[derive(Debug)]
 pub struct WeightNode{
     weight:usize,
     height:i32,
@@ -34,6 +35,7 @@ impl WeightNode{
     }
 
 }
+#[derive(Debug)]
 pub enum Rope{
     LeafNode(LeafNode),
     WeightNode(WeightNode),
