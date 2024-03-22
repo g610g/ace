@@ -1,4 +1,4 @@
-use sdl2::event::Event;
+use sdl2::{event::Event};
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
@@ -8,7 +8,6 @@ fn main() -> Result<(), String>{
     // pkg_config::probe_library
     let sdl_context = sdl2::init()?;
     let video_subsystem = sdl_context.video()?;
-    let keyboard_util = sdl_context.keyboard();
 
     let window = video_subsystem
                 .window("Ace", 800, 600)
@@ -18,10 +17,10 @@ fn main() -> Result<(), String>{
                 .map_err(|e| e.to_string())?;
  
     let mut canvas = window.into_canvas().build().map_err(|e| e.to_string())?;
-    // canvas.set_draw_color(Color::RGB(128, 128, 128));
-    // canvas.clear();
-    // canvas.present();
-    
+    canvas.set_draw_color(Color::RGB(128, 128, 128));
+    canvas.clear();
+    canvas.present();
+    let mut user_input_text = String::from(" ");
     let mut event_pump = sdl_context.event_pump()?;
     
     'running: loop {
@@ -32,8 +31,11 @@ fn main() -> Result<(), String>{
                     keycode: Some(Keycode::Escape),
                     ..
                 } => break 'running,
-                Event::TextInput { timestamp: (time), window_id: (id), text: (string_input) } => {
-
+                Event::TextInput { text, ..} => {
+                    user_input_text += &text;
+                },
+                Event::KeyDown{keycode: Some(Keycode::Backspace ), ..} => {
+                    user_input_text.pop();
                 },
                 _ => {}
             }
@@ -43,7 +45,7 @@ fn main() -> Result<(), String>{
         let font_context = sdl2::ttf::init().map_err(|e| e.to_string())?;
         let font_path = Path::new("asset/fonts/Raleway-VariableFont_wght.ttf");
         let mut raleway_font = font_context.load_font(font_path, 24).unwrap();
-        let surface = raleway_font.render("Hello world").blended(Color::RGB(255,160,122)).unwrap();
+        let surface = raleway_font.render(&user_input_text).blended(Color::RGB(255,160,122)).unwrap();
         let texture_creator = canvas.texture_creator();
         let texture = texture_creator.create_texture_from_surface(&surface).unwrap();
         let texture_query = texture.query();
